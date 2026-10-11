@@ -3,8 +3,10 @@ package Product_Service.Product_Service.service;
 import Product_Service.Product_Service.dto.ProductDto;
 import Product_Service.Product_Service.entity.Product;
 import org.springframework.data.domain.Page;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.print.Pageable;
+import java.io.IOException;
 
 public interface ProductService {
 
@@ -24,4 +26,8 @@ public interface ProductService {
 
     Page<ProductDto> advancedFilter(String Keyword,Long categoryId,
                                     double minPrice,double maxPrice,int page,int size,String sortBy,String sortDir);
+
+
+    ProductDto uploadImage(Long productId, MultipartFile file) throws IOException;
+
 }

@@ -11,8 +11,15 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +27,7 @@ public class ProductServiceImpl implements ProductService{
 
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
+    private final String uploadDir = System.getProperty("user.dir")+"/uploads/products/";
 
     @Override
     public ProductDto createProduct(ProductDto dto) {
@@ -110,5 +118,61 @@ public class ProductServiceImpl implements ProductService{
     @Override
     public Page<ProductDto> advancedFilter(String Keyword, Long categoryId, double minPrice, double maxPrice, int page, int size, String sortBy, String sortDir) {
         return null;
+    }
+
+    @Override
+    public ProductDto uploadImage(Long productId, MultipartFile file) throws IOException {
+
+       Product product = productRepository.findById(productId).orElseThrow(()-> new RuntimeException("Product not found with this ID : "+productId));
+
+       // below code checking multipart file empty or not //
+
+        if (file.isEmpty()){
+            throw new RuntimeException("Image file is Empty");
+        }
+
+        long mazSize = 2*1024*1024;
+
+        if (file.getSize() > mazSize){
+            throw new RuntimeException("file size must be less than 2MB");
+        }
+
+        List<String> allowedType = List.of("image/jpeg","image/png","image/jpg");
+
+        if (!allowedType.contains(file.getContentType())){
+            throw new RuntimeException("only jpeg png and jpg are allowed");
+        }
+
+        String origanalFileName = file.getOriginalFilename();
+
+        if (origanalFileName == null || !origanalFileName.contains(".")){
+            throw new RuntimeException("Invalid File Name");
+        }
+
+        String ext = origanalFileName.substring(origanalFileName.lastIndexOf(".")+1).toLowerCase();
+
+        List<String> allowedExt = List.of("jpg","png","jpeg");
+
+        if (!allowedExt.contains(ext)){
+            throw new RuntimeException("invalid Image Extension");
+        }
+
+        File folder = new File(uploadDir);
+
+        if (!folder.exists()){
+            folder.mkdirs();
+        }
+
+        String fileName = UUID.randomUUID().toString()+"."+ext;
+
+         Path filePath = Paths.get(uploadDir+fileName);
+
+        Files.write(filePath,file.getBytes());
+
+        String imageUrl = "/products/images/"+fileName;
+
+        product.setImageUrl(imageUrl);
+       Product product1 = productRepository.save(product);
+        return productMapper.toDto(product1);
     }
 }

@@ -8,6 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/products")
@@ -73,4 +76,14 @@ public class ProductController {
         return ResponseEntity.ok().body(productService.filterProducts(categoryId,minPrice,maxPrice,page,size));
 
         }
+
+      // here below code is for Image uploads //
+
+    @PostMapping("/{id}/upload-image")
+    public ResponseEntity<ProductDto> uploadImage(@PathVariable("id") Long id, @RequestParam("file")MultipartFile file) throws IOException {
+
+       return ResponseEntity.ok(productService.uploadImage(id,file));
+
+    }
+
 }
